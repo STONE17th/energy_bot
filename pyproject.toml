@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "energy-family-bot"
+version = "0.1.0"
+description = ""
+authors = ["STONE <17th@inbox.ru>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+aiogram = "^3.4.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
