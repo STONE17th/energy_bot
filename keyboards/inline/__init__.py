@@ -5,12 +5,15 @@
 
 from .main_menu import ikb_main_menu
 from .new_athlete import ikb_new_athlete, ikb_edited_athlete
-from .trainers import ikb_trainer_main_menu, ikb_athletes_navigation
+from .trainers import ikb_trainer_main_menu, ikb_athletes_navigation_items, ikb_athletes_navigation_list
+from .trainings import ikb_athletes_list
 
 __all__ = [
     'ikb_main_menu',
     'ikb_new_athlete',
     'ikb_edited_athlete',
     'ikb_trainer_main_menu',
-    'ikb_athletes_navigation'
+    'ikb_athletes_navigation_items',
+    'ikb_athletes_navigation_list',
+    'ikb_athletes_list'
 ]

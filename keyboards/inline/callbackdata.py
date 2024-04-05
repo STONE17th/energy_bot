@@ -1,6 +1,20 @@
 from aiogram.filters.callback_data import CallbackData
 
 
+class TrainerMenu(CallbackData, prefix='TM'):
+    menu: str
+    current_list_id: int = 0
+    current_id: int = 0
+    items: bool = False
+    profile: bool = True
+
+
+class TrainerMainMenu(CallbackData, prefix='TMM'):
+    menu: str
+    current_list_id: int = 0
+    current_id: int = 0
+
+
 class MainMenuCB(CallbackData, prefix='MM'):
     menu: str
 
@@ -34,6 +48,7 @@ class NewAthlete(CallbackData, prefix='na'):
     trainer_id: int
 
 
-class TrainerMainMenu(CallbackData, prefix='TMM'):
+class AthleteCheck(CallbackData, prefix='ac'):
     menu: str
-    current_id: int
+    trainer_id: int
+    athlete_id: int

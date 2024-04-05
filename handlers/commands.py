@@ -8,7 +8,7 @@ from keyboards.inline.callbackdata import TrainerNavigation
 from keyboards import ikb_main_menu, ikb_new_athlete, ikb_trainer_main_menu
 
 import settings
-import bot_text
+from scheduler.bot_scheduler import add_notification, modify_notification, notify_trainer
 
 command_router = Router()
 
@@ -41,6 +41,18 @@ async def get_photo(message: Message):
 async def get_photo(message: Message):
     print(message.from_user.id)
     await message.answer(str(message.from_user.id))
+
+
+@command_router.message(Command('sch'))
+async def get_photo(message: Message, user: Trainer, bot: Bot):
+    # await add_notification(bot, user)
+    await notify_trainer(bot, user)
+
+
+@command_router.message(Command('sche'))
+async def get_photo(message: Message, user: Trainer, bot: Bot):
+    user.options.schedule_time = message.text.split()[1]
+    await modify_notification(user)
 
 
 @command_router.message(Command('athletes'))

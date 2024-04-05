@@ -3,9 +3,9 @@ from .base import DataBase
 
 class TrainerOption:
     def __init__(self, options: str):
-        options_list = list(map(int, options.split()))
+        options_list = options.split()
         self.athletes_show = options_list[0]
-        self.interval_size = options_list[1]
+        self.schedule_time = options_list[1]
         self.option_3 = options_list[2]
 
 

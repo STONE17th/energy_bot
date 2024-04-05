@@ -41,6 +41,14 @@ class Athlete:
     def __str__(self):
         return f'Атлет: {self.first_name} {self.last_name} ({self.tg_id}, {self.id})\n{self.trainer}'
 
+    def __repr__(self):
+        return f'{self.first_name} {self.last_name}'
+
+    def __eq__(self, other):
+        if isinstance(other, type(self)):
+            return self.id == other.id
+        return False
+
 
 class AthletesDB(DataBase):
     _instance = None
@@ -93,13 +101,21 @@ class AthletesDB(DataBase):
         sql = 'SELECT * FROM athletes WHERE athlete_trainer_id=?'
         return super().execute(sql, (trainer_id,), fetchall=True)
 
+    def today_not_training(self, trainer_id: int, today: str):
+        sql = 'SELECT * FROM athletes WHERE athlete_trainer_id=?'
+        all_athletes = set(super().execute(sql, (trainer_id,), fetchall=True))
+        sql = 'SELECT athlete_id FROM trainings WHERE training_date=?'
+        today_athletes = super().execute(sql, (today,), fetchall=True)
+        today_athletes = {athlete[0] for athlete in today_athletes} if today_athletes else set()
+        return [Athlete(user[1]) for user in all_athletes if user[0] not in today_athletes]
+
     def paid(self, athlete_id: int):
         sql = 'UPDATE athletes SET remain_trainings = remain_trainings + 12 WHERE athlete_id=?'
         return super().execute(sql, (athlete_id,), commit=True)
 
     def complete_session(self, athlete_id: int):
         sql = 'UPDATE athletes SET total_trainings = total_trainings + 1, remain_trainings = remain_trainings - 1 WHERE athlete_id=?'
-        return super().execute(sql, (athlete_id,), commit=True)
+        super().execute(sql, (athlete_id,), commit=True)
 
 
 class Training:
@@ -136,9 +152,9 @@ class TrainingsDB(DataBase):
         super().execute(sql, commit=True)
 
     def add(self, athlete_id: int, message: str):
-        date = datetime.now().strftime('%d/%m/%y %I:%M')
+        today = str(date.today())
         sql = 'INSERT INTO trainings (athlete_id, training_date, training_schema) VALUES (?, ?, ?)'
-        super().execute(sql, (athlete_id, date, message), commit=True)
+        super().execute(sql, (athlete_id, today, message), commit=True)
 
     def athletes_data(self, athlete_id: int):
         sql = 'SELECT * FROM trainings WHERE athlete_id=?'

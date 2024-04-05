@@ -2,6 +2,7 @@ import os
 import asyncio
 
 from aiogram import Bot, Dispatcher
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from settings import *
 
 import database
@@ -9,6 +10,8 @@ from database.voting import VotingDB
 from handlers import handlers_routers
 from fsm import fsm_routers
 from middleware import LoadUserInfo
+
+from scheduler.bot_scheduler import start_scheduler
 
 bot = Bot(os.getenv('TOKEN'))
 dp = Dispatcher()
@@ -23,6 +26,7 @@ async def start_bot():
     database.TrainingsDB().create_table()
     dp.startup.register(on_start)
     dp.shutdown.register(on_shutdown)
+    await start_scheduler(bot)
     await dp.start_polling(bot)
 
 
