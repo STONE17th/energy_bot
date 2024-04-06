@@ -1,34 +1,33 @@
 from aiogram import Bot, Router, F
 from aiogram.filters import Command
-from aiogram.types import Message, CallbackQuery, InputMediaPhoto
+from aiogram.types import Message
 
-from database import AthletesDB, Athlete, TrainersDB, Trainer, TrainingsDB, Training
+from classes import *
+from database import *
 
-from keyboards.inline.callbackdata import TrainerNavigation
-from keyboards import ikb_main_menu, ikb_new_athlete, ikb_trainer_main_menu
+from keyboards import ikb_new_athlete, ikb_main_menu_trainer
 
 import settings
-from scheduler.bot_scheduler import add_notification, modify_notification, notify_trainer
+from scheduler.bot_scheduler import modify_notification, notify_trainer
 
 command_router = Router()
 
 
 @command_router.message(Command('start'))
 async def com_start(message: Message, user: Athlete | Trainer | None, bot: Bot):
-    print(user)
-    trainers_list = [Trainer(item[0]) for item in TrainersDB().load_all()]
-    if isinstance(user, Athlete):
-        await message.reply('Ты атлет')
+    match user:
+        case Athlete():
+            await message.reply('Ты атлет')
 
-        # await bot.send_photo(user.tg_id, photo=user.trainer.photo, caption=str(user.trainer),
-        #                      reply_markup=ikb_main_menu(trainers_list, 0))
-    elif isinstance(user, Trainer):
-        message_text = f'Привет, {user.first_name}! Это твой бот с меню!'
-        await bot.send_photo(message.from_user.id, photo=user.photo, caption=message_text,
-                             reply_markup=ikb_trainer_main_menu())
-    else:
-        await bot.send_photo(message.from_user.id, photo=trainers_list[0].photo, caption=str(trainers_list[0]),
-                             reply_markup=ikb_main_menu(trainers_list, 0))
+        case Trainer():
+            message_text = f'Привет, {user.first_name}! Это твой бот с меню!'
+            await bot.send_photo(message.from_user.id, photo=user.photo, caption=message_text,
+                                 reply_markup=ikb_main_menu_trainer(user))
+        case _:
+            all_trainers = TrainersDB().load_all()
+            await message.reply('Тебя нет в базе, запишись')
+            # await bot.send_photo(message.from_user.id, photo=trainers_list[0].photo, caption=str(trainers_list[0]),
+            #                      reply_markup=ikb_main_menu(trainers_list, 0))
 
 
 @command_router.message(F.photo)
@@ -92,3 +91,11 @@ async def athlete_info(message: Message):
     athlete_id = int(message.text.split()[1])
     result = TrainingsDB().athletes_data(athlete_id)
     await message.reply(str(result))
+
+
+@command_router.message(Command('test'))
+async def athlete_info(message: Message, trainer: Trainer, athlete: Athlete):
+    print(trainer)
+    print(athlete)
+    # athlete = Athlete(111222333)
+    # await message.answer('Календарь', reply_markup=ikb_calendar(athlete))

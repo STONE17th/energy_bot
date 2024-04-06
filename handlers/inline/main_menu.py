@@ -3,55 +3,53 @@ from aiogram.types import CallbackQuery, InputMediaPhoto
 
 import settings
 
-from database import AthletesDB, Athlete, TrainersDB, Trainer
+from classes import *
 
-from keyboards import ikb_main_menu, ikb_new_athlete, ikb_trainer_main_menu
-from keyboards.inline.callbackdata import TrainerNavigation, MainMenuCB
-# from keyboards.inline.main_menu import ikb_back
-from database.user import UserDB
+from keyboards import ikb_new_athlete, ikb_main_menu_trainer
+from keyboards.inline.callbackdata import MainMenuCB
 
-#
 main_menu_router = Router()
 
 
-@main_menu_router.callback_query(MainMenuCB.filter(F.menu == 'MM'))
+async def callback_main_menu(callback: CallbackQuery, user: Athlete | Trainer | None, bot: Bot):
+    message_text = f'Привет, {user.first_name}! Это твой бот с меню!'
+    message_media = InputMediaPhoto(media=user.photo, caption=message_text)
+    await bot.edit_message_media(media=message_media, chat_id=callback.from_user.id,
+                                 message_id=callback.message.message_id,
+                                 reply_markup=ikb_main_menu_trainer(user))
+
+
+@main_menu_router.callback_query(MainMenuCB.filter(F.menu == 'home'))
 async def com_start(callback: CallbackQuery, user: Athlete | Trainer | None, bot: Bot):
-    trainers_list = [Trainer(item[0]) for item in TrainersDB().load_all()]
-    if isinstance(user, Athlete):
-        await callback.reply('Ты атлет')
+    match user:
+        case Athlete():
+            await callback.answer('Ты атлет', show_alert=True)
 
-        # await bot.send_photo(user.tg_id, photo=user.trainer.photo, caption=str(user.trainer),
-        #                      reply_markup=ikb_main_menu(trainers_list, 0))
-    elif isinstance(user, Trainer):
-        message_text = f'Привет, {user.first_name}! Это твой бот с меню!'
-        message_media = InputMediaPhoto(media=user.photo, caption=message_text)
-        await bot.edit_message_media(chat_id=callback.from_user.id,
-                                     message_id=callback.message.message_id,
-                                     media=message_media,
-                                     reply_markup=ikb_trainer_main_menu())
-    else:
-        await bot.send_photo(callback.from_user.id, photo=trainers_list[0].photo, caption=str(trainers_list[0]),
-                             reply_markup=ikb_main_menu(trainers_list, 0))
+        case Trainer():
+            await callback_main_menu(callback, user, bot)
+        case _:
+            all_trainers = TrainersDB().load_all()
+            await message.reply('Тебя нет в базе, запишись')
 
 
-@main_menu_router.callback_query(TrainerNavigation.filter(F.menu == 'navi_trainer'))
-async def trainer_navigation(callback: CallbackQuery, callback_data: TrainerNavigation, bot: Bot):
-    trainers_list = [Trainer(item[0]) for item in TrainersDB().load_all()]
-    current_trainer = trainers_list[callback_data.trainer_id]
-    await bot.edit_message_media(InputMediaPhoto(media=current_trainer.photo, caption=str(current_trainer)),
-                                 chat_id=callback.from_user.id, message_id=callback.message.message_id,
-                                 reply_markup=ikb_main_menu(trainers_list, callback_data.trainer_id))
-
-
-@main_menu_router.callback_query(TrainerNavigation.filter(F.menu == 'select_trainer'))
-async def trainer_select(callback: CallbackQuery, callback_data: TrainerNavigation, bot: Bot):
-    await callback.answer('Ваша заявка отправлена!', show_alert=True)
-    trainer = Trainer(callback_data.trainer_id)
-    athlete = (callback.from_user.id, callback.from_user.first_name, callback.from_user.last_name,
-               trainer.id)
-    message = f'У вас новый атлет: {callback.from_user.first_name} {callback.from_user.last_name}'
-    await bot.send_photo(trainer.tg_id, photo=settings.pict['new_athlete'],
-                         caption=message, reply_markup=ikb_new_athlete(*athlete))
+# @main_menu_router.callback_query(TrainerNavigation.filter(F.menu == 'navi_trainer'))
+# async def trainer_navigation(callback: CallbackQuery, callback_data: TrainerNavigation, bot: Bot):
+#     trainers_list = [Trainer(item[0]) for item in TrainersDB().load_all()]
+#     current_trainer = trainers_list[callback_data.trainer_id]
+#     await bot.edit_message_media(InputMediaPhoto(media=current_trainer.photo, caption=str(current_trainer)),
+#                                  chat_id=callback.from_user.id, message_id=callback.message.message_id,
+#                                  reply_markup=ikb_main_menu(trainers_list, callback_data.trainer_id))
+#
+#
+# @main_menu_router.callback_query(TrainerNavigation.filter(F.menu == 'select_trainer'))
+# async def trainer_select(callback: CallbackQuery, callback_data: TrainerNavigation, bot: Bot):
+#     await callback.answer('Ваша заявка отправлена!', show_alert=True)
+#     trainer = Trainer(callback_data.trainer_id)
+#     athlete = (callback.from_user.id, callback.from_user.first_name, callback.from_user.last_name,
+#                trainer.id)
+#     message = f'У вас новый атлет: {callback.from_user.first_name} {callback.from_user.last_name}'
+#     await bot.send_photo(trainer.tg_id, photo=settings.pict['new_athlete'],
+#                          caption=message, reply_markup=ikb_new_athlete(*athlete))
 
 # @main_menu_router.callback_query(MainMenuCB.filter(F.button == 'about'))
 # async def main_menu_about(callback: CallbackQuery, callback_data: MainMenuCB, bot: Bot):

@@ -1,32 +1,6 @@
 from .base import DataBase
 
 
-class TrainerOption:
-    def __init__(self, options: str):
-        options_list = options.split()
-        self.athletes_show = options_list[0]
-        self.schedule_time = options_list[1]
-        self.option_3 = options_list[2]
-
-
-class Trainer:
-    def __new__(cls, trainer_id: int):
-        if trainer := TrainersDB().load(trainer_id):
-            instance = super().__new__(cls)
-            instance.id = trainer[0]
-            instance.tg_id = trainer[1]
-            instance.first_name = trainer[2]
-            instance.last_name = trainer[3]
-            instance.photo = trainer[4]
-            instance.description = trainer[5]
-            instance.options = TrainerOption(trainer[6])
-            return instance
-        return None
-
-    def __str__(self):
-        return f'Тренер: {self.first_name} {self.last_name} ({self.tg_id}, {self.id})'
-
-
 class TrainersDB(DataBase):
     _instance = None
 
@@ -48,17 +22,17 @@ class TrainersDB(DataBase):
         )'''
         super().execute(sql, commit=True)
 
-    def load(self, trainer_id: int):
-        sql = 'SELECT * FROM trainers WHERE trainer_id=?'
-        return super().execute(sql, (trainer_id,), fetchone=True)
-
-    def load_by_tg_id(self, trainer_id: int):
+    def load(self, trainer_tg_id: int):
         sql = 'SELECT * FROM trainers WHERE trainer_tg_id=?'
-        return super().execute(sql, (trainer_id,), fetchone=True)
+        return super().execute(sql, (trainer_tg_id,), fetchone=True)
 
     def load_all(self):
         sql = 'SELECT * FROM trainers'
         return super().execute(sql, fetchall=True)
+
+    def set_options(self, trainer_id: int, options: str):
+        sql = '''UPDATE trainers SET options=? WHERE trainer_id=?'''
+        super().execute(sql, (options, trainer_id,), commit=True)
 
     # def _is_exists(self, user_id):
     #     sql = 'SELECT * FROM users WHERE user_tg_id=?'

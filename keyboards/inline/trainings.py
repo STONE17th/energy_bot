@@ -1,9 +1,9 @@
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.types import Message
 
-from .callbackdata import MainMenuCB, VotingNavigationCB, ConfirmCB, TrainerNavigation, TrainerMenu, AthleteCheck
+from .callbackdata import MainMenuCB, ConfirmCB, TrainerMenu, AthleteCheck
 
-from database import Trainer, Athlete, AthletesDB
+from classes import *
 from .navigation import *
 
 from datetime import date

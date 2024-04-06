@@ -1,13 +1,9 @@
-from .trainers import TrainersDB, Trainer
-from .athletes import AthletesDB, Athlete, TrainingsDB, Training
-
-# from .training import TrainingsDB, Training
+from .athlete import AthletesDB
+from .trainer import TrainersDB
+from .training import TrainingsDB
 
 __all__ = [
     'AthletesDB',
     'TrainersDB',
-    'TrainingsDB',
-    'Athlete',
-    'Trainer',
-    'Training'
+    'TrainingsDB'
 ]

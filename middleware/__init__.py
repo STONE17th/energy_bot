@@ -1,5 +1,5 @@
-from .bot_mw import LoadUserInfo
+from .bot_mw import LoadDBInfo
 
 __all__ = [
-    'LoadUserInfo',
+    'LoadDBInfo',
 ]

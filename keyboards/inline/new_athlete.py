@@ -2,7 +2,6 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.types import Message
 #
 from .callbackdata import NewAthlete
-from database.user import User, UserDB
 
 
 def ikb_new_athlete(tg_id: int, first_name: str, last_name: str, trainer_id: int, athlete_photo: str = '0'):

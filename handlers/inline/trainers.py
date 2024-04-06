@@ -3,21 +3,57 @@ from aiogram.types import CallbackQuery, InputMediaPhoto
 
 import settings
 
-from keyboards import ikb_athletes_navigation_items, ikb_athletes_navigation_list
-from keyboards.inline.callbackdata import TrainerMainMenu, TrainerMenu
-# from keyboards.inline.main_menu import ikb_back
-from database import AthletesDB, Athlete, Trainer, TrainingsDB
+from keyboards import ikb_athletes_navigation, ikb_athletes_profile_navigation
+from keyboards.inline.callbackdata import TrainerMainMenu, TrainerMenu, AthletesMenuNavigation
+from classes import *
 
 from datetime import date
 
-#
 trainers_router = Router()
+
+
+@trainers_router.callback_query(AthletesMenuNavigation.filter(F.button.in_({'navigate_athlete',
+                                                                            'navigate_athlete_inactive'})))
+async def navigate_athlete(callback: CallbackQuery, callback_data: AthletesMenuNavigation, user: Trainer, bot: Bot):
+    switch = True if callback_data.button == 'navigate_athlete' else False
+    len_list = len(user.athletes_active if switch else user.athletes_inactive)
+    shift = int(user.options.athletes_show)
+    current_id = callback_data.list_id
+    message_text = f'[{current_id + 1}/{len_list // shift + bool(len_list % shift)}]'
+    message_media = InputMediaPhoto(media=settings.pict['new_athlete'], caption=message_text)
+    await bot.edit_message_media(media=message_media, chat_id=callback.from_user.id,
+                                 message_id=callback.message.message_id,
+                                 reply_markup=ikb_athletes_navigation(user, callback_data, switch))
+
+
+@trainers_router.callback_query(
+    AthletesMenuNavigation.filter(F.button.in_({'select_athlete', 'select_athlete_inactive'})))
+async def select_athlete(callback: CallbackQuery, callback_data: AthletesMenuNavigation, user: Trainer, bot: Bot):
+    switch = True if callback_data.button == 'select_athlete' else False
+    athletes_list = sorted(user.athletes_active if switch else user.athletes_inactive, key=lambda x: x.first_name)
+    if athletes_list:
+        current_athlete = athletes_list[callback_data.athlete_id]
+        message_text = f'[{callback_data.athlete_id + 1}/{len(athletes_list)}]\n'
+        message_text += f'{current_athlete.first_name} {current_athlete.last_name}\n'
+        message_text += f'Дата начала тренировок: {current_athlete.start_date}\n'
+        message_text += f'Тренировок завершено: {current_athlete.total_trainings}\n'
+        message_text += f'Тренировок осталось: {current_athlete.remain_trainings}'
+        message_photo = current_athlete.photo
+    else:
+        message_text = 'Пока этот список пуст'
+        message_photo = settings.pict['new_athlete']
+    message_media = InputMediaPhoto(media=message_photo, caption=message_text)
+    await bot.edit_message_media(media=message_media, chat_id=callback.from_user.id,
+                                 message_id=callback.message.message_id,
+                                 reply_markup=ikb_athletes_profile_navigation(user, callback_data, switch))
 
 
 @trainers_router.callback_query(TrainerMenu.filter(F.menu == 'AN'))
 async def athletes_navigation(callback: CallbackQuery, callback_data: TrainerMenu, user: Trainer, bot: Bot):
-    athletes_list = sorted([Athlete(user[1]) for user in AthletesDB().for_trainer_by_id(user.id)],
-                           key=lambda x: x.first_name)
+    athletes_list = sorted(user.athletes, key=lambda x: x.first_name)
+    # athletes_list = sorted([Athlete(user[1]) for user in AthletesDB().for_trainer_by_id(user.id)],
+    #                        key=lambda x: x.first_name)
+    print(athletes_list, 'Новый список')
     today = str(date.today())
     today_not_training = AthletesDB().today_not_training(user.id, today)
     if user.options.athletes_show and not callback_data.items:

@@ -6,17 +6,16 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from settings import *
 
 import database
-from database.voting import VotingDB
 from handlers import handlers_routers
 from fsm import fsm_routers
-from middleware import LoadUserInfo
+from middleware import LoadDBInfo
 
 from scheduler.bot_scheduler import start_scheduler
 
 bot = Bot(os.getenv('TOKEN'))
 dp = Dispatcher()
 
-dp.update.outer_middleware(LoadUserInfo())
+dp.update.outer_middleware(LoadDBInfo())
 dp.include_routers(fsm_routers, handlers_routers)
 
 

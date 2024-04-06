@@ -3,7 +3,8 @@ from aiogram.types import Message
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from database import TrainersDB, Trainer, AthletesDB, Athlete
+from classes import *
+from database import *
 from keyboards import ikb_athletes_list
 
 from datetime import date
@@ -17,7 +18,7 @@ async def notify_trainer(bot: Bot, trainer: Trainer):
 
 
 async def add_notification(bot: Bot, trainer: Trainer):
-    hours, minutes = list(map(int, trainer.options.schedule_time.split(':')))
+    hours, minutes = list(map(int, [trainer.options.schedule_time[:2], trainer.options.schedule_time[2:]]))
     bot_scheduler.add_job(notify_trainer, 'cron', hour=hours, minute=minutes,
                           id=f'{trainer.tg_id}', args=[bot, trainer])
 
@@ -28,7 +29,7 @@ async def modify_notification(trainer: Trainer):
 
 
 async def start_scheduler(bot: Bot):
-    for trainer in [Trainer(user[0]) for user in TrainersDB().load_all()]:
+    for trainer in [Trainer(user[1]) for user in TrainersDB().load_all()]:
         await add_notification(bot, trainer)
     bot_scheduler.start()
 
