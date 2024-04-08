@@ -21,7 +21,7 @@ class TrainingsDB(DataBase):
         )'''
         super().execute(sql, commit=True)
 
-    def add(self, athlete_id: int, today_date: str = None, message: str = 'Done'):
+    def add(self, athlete_id: int, today_date: str = None, message: str = 'Training'):
         today = today_date or str(date.today())
         sql = 'INSERT INTO trainings (athlete_id, training_date, training_schema) VALUES (?, ?, ?)'
         super().execute(sql, (athlete_id, today, message), commit=True)
@@ -30,12 +30,12 @@ class TrainingsDB(DataBase):
         sql = 'DELETE FROM trainings WHERE athlete_id=? AND training_date=?'
         super().execute(sql, (athlete_id, target_date), commit=True)
 
-    # def athletes_data(self, athlete_id: int):
-    #     sql = 'SELECT * FROM trainings WHERE athlete_id=?'
-    #     if result := super().execute(sql, (athlete_id,), fetchall=True):
-    #         return [Training(data) for data in result]
-    #     return None
-
-    def all_athlete_dates(self, athlete_id: int):
-        sql = 'SELECT training_date FROM trainings WHERE athlete_id=?'
+    def load(self, athlete_id: int):
+        sql = 'SELECT training_date, training_schema FROM trainings WHERE athlete_id=?'
         return super().execute(sql, (athlete_id,), fetchall=True)
+
+    def not_training_today(self, trainer_id: int):
+        from_athletes = 'SELECT athlete_id FROM athletes WHERE athlete_trainer_id=? AND remain_trainings>?'
+        from_trainings = 'SELECT athlete_id FROM trainings WHERE training_date=? AND training_schema=?'
+        sql = f'{from_athletes} EXCEPT {from_trainings}'
+        return super().execute(sql, (trainer_id, 0, str(date.today()), 'Training'), fetchall=True)

@@ -1,5 +1,5 @@
 from database import AthletesDB, TrainingsDB
-from .calendar import TrainingMonth
+from .calendar import Month
 
 from datetime import date
 
@@ -22,36 +22,43 @@ class Athlete:
 
     @property
     def calendar(self):
-        result = {f'2024-{str(month).zfill(2)}': [] for month in range(date.today().month, 0, -1)}
-        all_dates = []
-        if data_from_db := TrainingsDB().all_athlete_dates(self.id):
-            all_dates = [t_date[0] for t_date in data_from_db]
-        for cur_date in all_dates:
-            m_y, day = cur_date.rsplit('-', 1)
-            result[m_y].append(int(day))
-        return {m_y: TrainingMonth(m_y, days) for m_y, days in result.items()}
+        current_year = date.today().year
+        current_month = date.today().month
+        result = {f'{current_year}-{str(current_month).zfill(2)}': [[], []]}
+        if data_from_db := TrainingsDB().load(self.id):
+            for day in data_from_db:
+                cur_month = day[0].rsplit('-', 1)[0]
+                cur_day = int(day[0].rsplit('-', 1)[1])
+                if cur_month in result:
+                    if day[1] == 'Training':
+                        result[cur_month][0].append(cur_day)
+                    else:
+                        result[cur_month][1].append((cur_day, int(day[1].split()[1])))
+                else:
+                    if day[1] == 'Training':
+                        result[cur_month] = [[cur_day], []]
+                    else:
+                        result[cur_month] = [[], [(cur_day, int(day[1].split()[1]))]]
+        return {month_year: Month(month_year, *days) for month_year, days in result.items()}
 
     def paid(self, pay_amount: int):
         AthletesDB().paid(self.id, pay_amount)
         self.remain_trainings += pay_amount
-        TrainingsDB().add(self.id, str(date.today()), 'Payment')
+        TrainingsDB().add(self.id, str(date.today()), f'Payment {pay_amount}')
 
     def training(self, training_date: str, on_delete: bool = False):
         if on_delete:
-            AthletesDB().target_date(self.id, training_date, on_delete=True)
+            AthletesDB().training(self.id, training_date, on_delete=True)
             self.remain_trainings += 1
             self.total_trainings -= 1
             return True
         else:
             if self.remain_trainings > 0:
-                AthletesDB().target_date(self.id, training_date)
+                AthletesDB().training(self.id, training_date)
                 self.remain_trainings -= 1
                 self.total_trainings += 1
                 return True
             return False
-
-    def for_trainer(self):
-        return f'Имя: {self.first_name} {self.last_name}\nНачало занятий: {self.start_date}\nВсего занятий: {self.total_trainings}\n\nОсталось оплаченных занятий: {self.remain_trainings}'
 
     def __str__(self):
         return f'Атлет: {self.first_name} {self.last_name} (ID:{self.id}, TG:{self.tg_id})'

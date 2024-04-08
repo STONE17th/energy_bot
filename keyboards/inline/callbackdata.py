@@ -24,6 +24,7 @@ class AthletesMenuNavigation(CallbackData, prefix='AMN'):
 
 class TrainingCalendar(CallbackData, prefix='TC'):
     button: str
+    view: str = 'Training'
     list_athlete_id: int = 0
     athlete_id: int = 0
     current_month: int = 0
@@ -66,6 +67,5 @@ class NewAthlete(CallbackData, prefix='na'):
 
 
 class AthleteCheck(CallbackData, prefix='ac'):
-    menu: str
-    trainer_id: int
+    button: str
     athlete_id: int

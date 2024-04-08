@@ -61,20 +61,3 @@ def button_change_value(reply_keyboard: InlineKeyboardBuilder,
                                                                          new_time=new_time,
                                                                          refresh=refresh))
 
-
-def change_show(current_value: int, new_value: int):
-    return (current_value + new_value) % 6
-
-
-def change_time(current_value: str, new_value: int):
-    if not new_value:
-        return current_value
-    hours, minutes = list(map(int, [current_value[:2], current_value[2:]]))
-    if minutes == 30:
-        if new_value > 0:
-            return f'{str((hours + 1) % 24).zfill(2)}00'
-        return f'{str(hours).zfill(2)}00'
-    else:
-        if new_value > 0:
-            return f'{str(hours).zfill(2)}30'
-        return f'{str((hours - 1) % 24).zfill(2)}30'

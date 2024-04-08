@@ -7,6 +7,8 @@ from classes import *
 from keyboards import ikb_options_trainer
 from keyboards.inline.callbackdata import TrainerOptions
 
+from scheduler.bot_scheduler import modify_notification
+
 trainer_options_router = Router()
 
 
@@ -21,6 +23,7 @@ async def trainer_options_handler(callback: CallbackQuery, user: Trainer, bot: B
                               show_alert=True)
     elif callback_data.button == 'save_time':
         user.set_options(f'{user.options.athletes_show} {callback_data.current_time} 0')
+        await modify_notification(user)
         await callback.answer(f'Время ежедневного оповещения изменено на {show_time}',
                               show_alert=True)
     message_text = f'{user.first_name}! Ваши настройки:\n'

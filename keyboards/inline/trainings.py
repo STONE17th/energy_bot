@@ -6,15 +6,16 @@ from .callbackdata import MainMenuCB, ConfirmCB, TrainerMenu, AthleteCheck
 from classes import *
 from .navigation import *
 
-from datetime import date
+from database import TrainingsDB
 
 
 def ikb_athletes_list(trainer: Trainer):
-    today = date.today()
-    athletes_list = sorted(AthletesDB().today_not_training(trainer.id, str(today)), key=lambda x: x.first_name)
+    athletes_list = sorted(
+        [Athlete(athlete_id[0], tg_id=False) for athlete_id in TrainingsDB().not_training_today(trainer.id)],
+        key=lambda x: f'{x.first_name} {x.last_name}')
     keyboard = InlineKeyboardBuilder()
     for athlete in athletes_list:
         keyboard.button(text=f'{athlete.first_name} {athlete.last_name}',
-                        callback_data=AthleteCheck(menu='AtCh', trainer_id=trainer.tg_id, athlete_id=athlete.id))
+                        callback_data=AthleteCheck(button='add_today_training', athlete_id=athlete.id))
     keyboard.adjust(1, repeat=True)
     return keyboard.as_markup()

@@ -24,14 +24,15 @@ async def training_calendar(callback: CallbackQuery, callback_data: TrainingCale
     athletes_list = sorted(user.athletes_active if switch else user.athletes_inactive, key=lambda x: x.first_name)
     current_athlete = athletes_list[callback_data.athlete_id]
     current_month = callback_data.current_month
-    month_list = [f'2024-{str(month).zfill(2)}' for month in range(1, date.today().month + 1)]
+    month_list = sorted(current_athlete.calendar)
     cur_year, cur_month = list(map(int, month_list[current_month].split('-')))
     message_text = f'Атлет: {current_athlete.first_name} {current_athlete.last_name}\n'
-    message_text += f'Тренировки за {rus_month[cur_month - 1].title()} {cur_year}'
+    message_title = 'Тренировки' if callback_data.view == 'Training' else 'Платежи'
+    message_text += f'{message_title} за {rus_month[cur_month - 1].title()} {cur_year}'
     message_media = InputMediaPhoto(media=current_athlete.photo, caption=message_text)
     await bot.edit_message_media(media=message_media, chat_id=callback.from_user.id,
                                  message_id=callback.message.message_id,
-                                 reply_markup=ikb_calendar(user, current_athlete, callback_data, switch))
+                                 reply_markup=ikb_calendar(current_athlete, callback_data, True, switch))
 
 
 @trainings_router.callback_query(
@@ -63,7 +64,7 @@ async def training_calendar(callback: CallbackQuery, callback_data: TrainingCale
         message_media = InputMediaPhoto(media=current_athlete.photo, caption=message_text)
         await bot.edit_message_media(media=message_media, chat_id=callback.from_user.id,
                                      message_id=callback.message.message_id,
-                                     reply_markup=ikb_calendar(user, current_athlete, callback_data, switch))
+                                     reply_markup=ikb_calendar(current_athlete, callback_data, True, switch))
     else:
         await callback.answer('Нет оплаченных тренировок', show_alert=True)
 

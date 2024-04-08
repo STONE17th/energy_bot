@@ -3,8 +3,8 @@ from aiogram.types import CallbackQuery, InputMediaPhoto
 
 import settings
 
-from keyboards import ikb_athletes_navigation, ikb_athletes_profile_navigation
-from keyboards.inline.callbackdata import TrainerMainMenu, TrainerMenu, AthletesMenuNavigation
+from keyboards import ikb_athletes_navigation, ikb_athletes_profile_navigation, ikb_athletes_list
+from keyboards.inline.callbackdata import TrainerMainMenu, TrainerMenu, AthletesMenuNavigation, AthleteCheck
 from classes import *
 
 from datetime import date
@@ -46,6 +46,18 @@ async def select_athlete(callback: CallbackQuery, callback_data: AthletesMenuNav
     await bot.edit_message_media(media=message_media, chat_id=callback.from_user.id,
                                  message_id=callback.message.message_id,
                                  reply_markup=ikb_athletes_profile_navigation(user, callback_data, switch))
+
+
+@trainers_router.callback_query(AthleteCheck.filter(F.button == 'add_today_training'))
+async def athletes_training_today(callback: CallbackQuery, callback_data: AthleteCheck, user: Trainer, bot: Bot):
+    athlete = Athlete(callback_data.athlete_id, tg_id=False)
+    athlete.training(str(date.today()))
+    message_media = InputMediaPhoto(media=settings.pict['new_athlete'],
+                                    caption=f'{athlete.first_name} {athlete.last_name} записан на сегодня!')
+    await bot.edit_message_media(media=message_media,
+                                 chat_id=callback.from_user.id,
+                                 message_id=callback.message.message_id,
+                                 reply_markup=ikb_athletes_list(user))
 
 
 @trainers_router.callback_query(TrainerMenu.filter(F.menu == 'AN'))

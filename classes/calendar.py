@@ -1,35 +1,49 @@
 from datetime import date
 
 
-def _is_leap_year(year: int) -> bool:
-    return not year % 4 and year % 100 or not year % 400
+class Day:
+    def __init__(self, number: int | None = None, training: bool = False, payment: int | None = None):
+        self.number = number
+        self.training = training
+        self.payment = payment
 
 
-class TrainingMonth:
-    def __init__(self, month_year: str, trainings_days: list[int]):
-        year, month = list(map(int, month_year.split('-')))
-        self.month = month
-        self.year = year
-        self.first_day = date(year, month, 1).weekday()
-        self.trainings_days = self._fill_days(trainings_days)
+class Month:
+    month_name = {
+        1: 'Январь', 2: 'Февраль', 3: 'Март', 4: 'Апрель', 5: 'Май', 6: 'Июнь',
+        7: 'Июль', 8: 'Август', 9: 'Сентябрь', 10: 'Октябрь', 11: 'Ноябрь', 12: 'Декабрь'
+    }
 
-    def _fill_days(self, trainings_days: list[int]):
-        month = []
-        days = [0] * self.first_day
-        i = 1
-        while i <= self.last_day:
-            while len(days) < 7 and i <= self.last_day:
-                mark = f'{i}_✅' if i in trainings_days else i
-                days.append(mark)
-                i += 1
-            month.append(days)
-            days = []
-        while len(month[-1]) < 7:
-            month[-1].append(0)
-        return month
+    def __init__(self, str_date: str, training_days: list[int], payment_days: list[tuple[int, int]]):
+        self.year, self.month = list(map(int, str_date.split('-')))
+        self.name = Month.month_name[self.month]
+        self._first_day = date(self.year, self.month, 1).weekday()
+        self._training_days = training_days
+        self._payment_days = {day[0]: day[1] for day in payment_days}
 
     @property
-    def last_day(self):
-        max_days = {1: 31, 2: 29 if _is_leap_year(self.year) else 28, 3: 31, 4: 30,
-                    5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31}
-        return max_days[self.month]
+    def days(self):
+        list_days = []
+        total_days = self._max_days + self._first_day
+        for i in range(total_days + (7 - total_days % 7) * bool(total_days % 7)):
+            number = i - self._first_day + 1
+            if 0 <= number - 1 < self._max_days:
+                list_days.append(Day(number, number in self._training_days, self._payment_days.get(number, None)))
+            else:
+                list_days.append(Day())
+        return list_days
+
+    @property
+    def _max_days(self) -> int:
+        month_day = {
+            1: 31, 2: 29 if self._is_leap() else 28, 3: 31, 4: 30, 5: 31, 6: 30,
+            7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31
+        }
+        return month_day[self.month]
+
+    def _is_leap(self) -> bool:
+        return not self.year % 4 and self.year % 100 or not self.year % 400
+
+    def __repr__(self):
+        return ' -> '.join(
+            [f'{day.number} {"T" if day.training else ""} {day.payment if day.payment else ""}' for day in self.days])

@@ -48,9 +48,9 @@ async def get_photo(message: Message, user: Trainer, bot: Bot):
     await notify_trainer(bot, user)
 
 
-@command_router.message(Command('sche'))
+@command_router.message(Command('new_time'))
 async def get_photo(message: Message, user: Trainer, bot: Bot):
-    user.options.schedule_time = message.text.split()[1]
+    user.set_options(f'5 {message.text.split()[1]} 0')
     await modify_notification(user)
 
 
@@ -94,8 +94,5 @@ async def athlete_info(message: Message):
 
 
 @command_router.message(Command('test'))
-async def athlete_info(message: Message, trainer: Trainer, athlete: Athlete):
-    print(trainer)
-    print(athlete)
-    # athlete = Athlete(111222333)
-    # await message.answer('Календарь', reply_markup=ikb_calendar(athlete))
+async def athlete_info(message: Message, user: Trainer, bot: Bot):
+    await notify_trainer(bot, user)
